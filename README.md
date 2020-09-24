@@ -1,68 +1,123 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### React 移动端项目步骤
 
-## Available Scripts
+##### 1.create-react-app(react脚手架)创建项目
 
-In the project directory, you can run:
+````
+create-react-app ygshop
+````
 
-### `yarn start`
+##### 2.在码云上创建一个远程仓库
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+![image-20200924194834722](C:%5CUsers%5C86135%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200924194834722.png)
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+ ![image-20200924195309375](C:%5CUsers%5C86135%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200924195309375.png)
 
-### `yarn test`
+##### 3.开始移动端配置（px→rem）
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. 暴露webpack配置，即 react-scripts 包
 
-### `yarn build`
+```bash
+npm run eject
+```
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+⚠️ 在运行该命令的时候，要先将已经修改的文件提交到本地仓库中，否则会报错！
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+2. 安装项目项目需要的包 `lib-flexible` 、 `postcss-px2rem` 和 `postcss-loader`：
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm install postcss-px2rem lib-flexible --save
+npm install postcss-loader --dev
+```
 
-### `yarn eject`
+3. 在项目的 public/index.html 入口文件添加 
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```html
+<meta name="viewport" content="width=device-width,inital-scale=1.0,
+    maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. 然后在项目入口文件 index.js 中引入 `lib-flexible`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```js
+import "lib-flexible" ;
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+5. 接着，在项目config目录下的 webpack.config.js 中引入 `postcss-px2rem`
 
-## Learn More
+```bash
+const px2rem = require("postcss-px2rem");
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+![image-20200627220634758](58.React%20%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%A1%B9%E7%9B%AE%E6%AD%A5%E9%AA%A4.assets/image-20200627220634758.png)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- 在 webpack.config.js 的 `postcss-loader` loader里面添加 ：
 
-### Code Splitting
+```js
+{
+        loader: require.resolve("postcss-loader"),
+        options: {
+          /* 省略代码... */
+          plugins: () => [
+            require( postcss-flexbugs-fixes ),
+            require( postcss-preset-env )({
+              autoprefixer: {
+                flexbox:  no-2009 ,
+              },
+              stage: 3,
+            }),
+            px2rem({remUnit: 37.5}), // 添加的内容
+            /* 省略代码... */
+          ],
+          sourceMap: isEnvProduction && shouldUseSourceMap,
+        },
+      },
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
 
-### Analyzing the Bundle Size
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+重新启动项目，发现里面的px单位都变成了rem
 
-### Making a Progressive Web App
+注意：使用 px2rem-loader 后再使用px上有些不同：
+    直接写 px ，编译后会直接转化成rem —— 除开下面两种情况，其他长度用这个
+    在 px 后面添加 /*no*/ ，不会转化 px，会原样输出。 —— 一般border需用这个
+    在 px 后面添加 /*px*/ ，会根据 dpr 的不同，生成三套代码。—— 一般字体需用这个,默认是@2x图 style
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+```css
+.App {
+  .header {
+    border: 10px solid #ddd; /*no*/
+    color:#f00;
+    font-size: 100px; /*px*/  
+  }
+}
+```
 
-### Advanced Configuration
+##### 4.[引入移动端UI库 ant-design-mobile（按需加载）](https://mobile.ant.design/index-cn)
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+   1.安装antd-mobile 
 
-### Deployment
+```bash
+$ npm install antd-mobile --save
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+2. 安装babel-plugin-import实现按需加载组件代码和样式
 
-### `yarn build` fails to minify
+```bash
+yarn add babel-plugin-import
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+3.在package.json文件中找到babel添加配置如下
+
+```json
+  "plugins": [
+      [
+        "import",
+        {
+          "libraryName": "antd-mobile",
+          "style": "css"
+        }
+      ]
+    ]
+```
+
+![image-20200925003246634](58.React%20%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%A1%B9%E7%9B%AE%E6%AD%A5%E9%AA%A4.assets/image-20200925003246634.png)
